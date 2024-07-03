@@ -1,107 +1,96 @@
 ```Java
-public class LargeNumberAddition {
+public class Palindromes {
 
-    public String add(String number1, String number2) {
-        StringBuilder result = new StringBuilder();
-        int i, j, carry = 0;
+    public Boolean isPalindrome(String word) {
 
-        for (i = number1.length() - 1, j = number2.length() - 1; i >= 0 && j >= 0; i--, j--) {
-            int sum = Character.getNumericValue(number1.charAt(i))
-                        + Character.getNumericValue(number2.charAt(j))
-                        + carry;
-            result.insert(0, sum%10);
-            carry = sum / 10;
+        if (word == null || word.strip().isEmpty()) {
+            return Boolean.FALSE;
         }
-        while (i >= 0) {
-            int sum = Character.getNumericValue(number1.charAt(i)) + carry;
-            result.insert(0, sum%10);
-            carry = sum / 10;
-            i -= 1;
+        word = word.replaceAll("[^a-zA-Z]","");
+        //word = word.toLowerCase();
+
+        int left_ptr = 0;
+        int right_ptr = word.length() - 1;
+
+        while (left_ptr <= right_ptr) {
+            if (toLowerCase(word.charAt(left_ptr)) != toLowerCase(word.charAt(right_ptr))) {
+                return Boolean.FALSE;
+            }
+            left_ptr += 1;
+            right_ptr -= 1;
         }
-        while (j >= 0) {
-            int sum = Character.getNumericValue(number2.charAt(j)) + carry;
-            result.insert(0, sum%10);
-            carry = sum / 10;
-            j -= 1;
-        }
-        if (carry > 0) {
-            result.insert(0, 1);
-        }
-        return result.toString();
+        return Boolean.TRUE;
     }
 
-    public String addWithCommas(String number1, String number2) {
-        number1 = number1.replace(",","");
-        number2 = number2.replace(",","");
+    public List<String> getLongestPalindrome(String input) {
 
-        String result = add(number1, number2);
+        LinkedHashSet<String> longestPalindromes = new LinkedHashSet<>();
+        int max_length = 0;
 
-        return addCommas(result);
-    }
-
-    private String addCommas(String number) {
-        StringBuilder num = new StringBuilder(number);
-        for (int i = number.length()-3 ; i > 0; i-=3 ) {
-            num.insert(i, ",");
+        for (int i = 0; i < input.length(); i++) {
+            if (!Character.isAlphabetic(input.charAt(i))){
+                continue;
+            }
+            for (int j = i ; j < input.length(); j++) {
+                if (!Character.isAlphabetic(input.charAt(j))) {
+                    continue;
+                }
+                String substring = input.substring(i,j+1);
+                if ( isPalindrome(substring)) {
+                    int substring_length = substring.replaceAll("[^a-zA-Z]","").length();
+                    if ( substring_length > max_length) {
+                       longestPalindromes.clear();
+                       longestPalindromes.add(substring);
+                       max_length = substring_length;
+                    }
+                    else if ( substring_length == max_length) {
+                       longestPalindromes.add(substring);
+                    }
+                }
+            }
         }
-        return num.toString();
+        return new ArrayList<>(longestPalindromes);
     }
 
-    public String fibonacci(int n) {
-        if (n <= 2)
-            return "1";
-        List<String> sequence = new ArrayList<>();
-        sequence.add("1");
-        sequence.add("1");
-        for ( int i = 2; i < n; i++) {
-            sequence.add(add(sequence.get(i-1),sequence.get(i-2)));
-        }
-        return sequence.getLast();
+    private void assertIsPalindrome(String input, boolean expected) {
+        boolean result = isPalindrome(input);
+        assertEquals(result, expected);
     }
-}
 
-public class LargeNumberAddition_Test {
-
-    LargeNumberAddition lna;
-
-    public LargeNumberAddition_Test() {
-        lna = new LargeNumberAddition();
+    private void assertGetLongestPalindrome(String input, List<String> expected ) {
+        List<String> result = getLongestPalindrome(input);
+        assertEquals(result, expected);
     }
 
     @Test
-    public void testAdd() {
-        assertAdd("99999","1","100000");
-        assertAdd("1","8","9");
-        assertAdd("15","15","30");
-        assertAdd("3456","1234","4690");
-        // Large Numbers
-        assertAdd("9999999999999999","11111111111111111111","11121111111111111110");
+    public void testIsPalindrome() {
+        assertIsPalindrome("", false);
+        assertIsPalindrome("lotion", false);
+        assertIsPalindrome("racecar", true);
+
+        assertIsPalindrome("RaceCar", true);
+        assertIsPalindrome("    ", false);
+        assertIsPalindrome("Step on no pets", true);
+        assertIsPalindrome("Step    onno pets", true);
+        assertIsPalindrome("No lemon, no melons", false);
+
+        assertIsPalindrome("Eva,  can I See bees in    a Cave??????", true);
+        assertIsPalindrome("A man, a plan, a canal : PAnama!!!12345", true);
 
     }
 
     @Test
-    public void testAddWithCommas() {
-        assertAddWithCommas("99,999","1","100,000");
-        assertAddWithCommas("1","8","9");
-        assertAddWithCommas("15","15","30");
-        assertAddWithCommas("3,456","1,234","4,690");
-        //Commas test
-        assertAddWithCommas("123,456","111,234","234,690");
-        assertAddWithCommas("123,456","999,234","1,122,690");
-        assertAddWithCommas("1,123,456","111,234","1,234,690");
-        // Large Numbers
-        assertAddWithCommas("9,999,999,999,999,999","11,111,111,111,111,111,111","11,121,111,111,111,111,110");
+    public void testGetLongestPalindrome() {
+        assertGetLongestPalindrome("Aaaaa", Arrays.asList("Aaaaa"));
+        assertGetLongestPalindrome("A racecar", Arrays.asList("racecar"));
+        assertGetLongestPalindrome("No lemon, no melons",Arrays.asList("No lemon, no melon"));
+        assertGetLongestPalindrome("A racecar reviver", Arrays.asList("racecar","reviver"));
 
-    }
-
-    public void assertAdd(String a, String b, String expected) {
-        String answer = lna.add(a,b);
-        assertEquals(answer, expected);
-    }
-
-    public void assertAddWithCommas(String a, String b, String expected) {
-        String answer = lna.addWithCommas(a,b);
-        assertEquals(answer, expected);
+        assertGetLongestPalindrome("", new ArrayList<>());
+        assertGetLongestPalindrome("Racecars racing", Arrays.asList("Racecar", "cars rac"));
+        assertGetLongestPalindrome("Ra_ce% ca rs racing",Arrays.asList("Ra_ce% ca r","ca rs rac"));
+        assertGetLongestPalindrome("Abcab",Arrays.asList("A","b","c","a"));
+        assertGetLongestPalindrome("AbcaB",Arrays.asList("A","b","c","a","B"));
     }
 }
 
