@@ -10,7 +10,9 @@ import java.util.Set;
 
 public class Main {
 
-    private void dfsGraph(Map<Integer, ArrayList<Integer>> map, int parent, int curr, Map<Integer, ArrayList<Integer>> result, Set<Integer> visit) {
+    private void dfsGraph(
+        Map<Integer, ArrayList<Integer>> map, int parent, int curr,
+        Map<Integer, ArrayList<Integer>> result, Set<Integer> visit) {
         visit.add(curr);
         for (int dest : map.get(curr)) {
             if (!visit.contains(dest)) {
