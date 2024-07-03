@@ -1,96 +1,65 @@
 ```Java
-public class Palindromes {
+public class Main {
 
-    public Boolean isPalindrome(String word) {
-
-        if (word == null || word.strip().isEmpty()) {
-            return Boolean.FALSE;
-        }
-        word = word.replaceAll("[^a-zA-Z]","");
-        //word = word.toLowerCase();
-
-        int left_ptr = 0;
-        int right_ptr = word.length() - 1;
-
-        while (left_ptr <= right_ptr) {
-            if (toLowerCase(word.charAt(left_ptr)) != toLowerCase(word.charAt(right_ptr))) {
-                return Boolean.FALSE;
+    private void dfsGraph(Map<Integer, ArrayList<Integer>> adj, int parent, int curr, Map<Integer, ArrayList<Integer>> ancestors, Set<Integer> visit) {
+        visit.add(curr);
+        for (int child : adj.get(curr)) {
+            if (!visit.contains(child)) {
+                ancestors.get(child).add(parent);
+                dfsGraph(adj, parent, child, ancestors, visit);
             }
-            left_ptr += 1;
-            right_ptr -= 1;
         }
-        return Boolean.TRUE;
     }
 
-    public List<String> getLongestPalindrome(String input) {
+    public Map<Integer, ArrayList<Integer>> getAncestors(int[][] edges) {
+        Set<Integer> nodes = new HashSet<>();
+        for (int[] edge : edges) {
+            nodes.add(edge[0]);
+            nodes.add(edge[1]);
+        }
+        Map<Integer, ArrayList<Integer>> adjacencyList = new HashMap<>();
+        Map<Integer, ArrayList<Integer>> ancestors = new HashMap<>();
+        for (int node: nodes) {
+            ancestors.put(node, new ArrayList<>());
+            adjacencyList.put(node, new ArrayList<>());
+        }
+        for (int[] edge : edges) {
+            adjacencyList.get(edge[0]).add(edge[1]);
+        }
+        for (int node: adjacencyList.keySet()) {
+            dfsGraph(adjacencyList, node, node, ancestors, new HashSet<>());
+        }
+        return ancestors;
+    }
 
-        LinkedHashSet<String> longestPalindromes = new LinkedHashSet<>();
-        int max_length = 0;
-
-        for (int i = 0; i < input.length(); i++) {
-            if (!Character.isAlphabetic(input.charAt(i))){
-                continue;
-            }
-            for (int j = i ; j < input.length(); j++) {
-                if (!Character.isAlphabetic(input.charAt(j))) {
-                    continue;
-                }
-                String substring = input.substring(i,j+1);
-                if ( isPalindrome(substring)) {
-                    int substring_length = substring.replaceAll("[^a-zA-Z]","").length();
-                    if ( substring_length > max_length) {
-                       longestPalindromes.clear();
-                       longestPalindromes.add(substring);
-                       max_length = substring_length;
-                    }
-                    else if ( substring_length == max_length) {
-                       longestPalindromes.add(substring);
-                    }
+    public boolean hasSharedAncestor(int[][] parentChildPairs, int node1, int node2) {
+        if (node1 == node2)
+            return false;
+        Map<Integer, ArrayList<Integer>> ancestors = getAncestors(parentChildPairs);
+        List<Integer> node1Ancestors = ancestors.get(node1);
+        List<Integer> node2Ancestors = ancestors.get(node2);
+        for (int ancestor1: node1Ancestors) {
+            for (int ancestor2: node2Ancestors) {
+                if (ancestor1 == ancestor2) {
+                    return true;
                 }
             }
         }
-        return new ArrayList<>(longestPalindromes);
+        return false;
     }
 
-    private void assertIsPalindrome(String input, boolean expected) {
-        boolean result = isPalindrome(input);
-        assertEquals(result, expected);
-    }
-
-    private void assertGetLongestPalindrome(String input, List<String> expected ) {
-        List<String> result = getLongestPalindrome(input);
-        assertEquals(result, expected);
-    }
-
-    @Test
-    public void testIsPalindrome() {
-        assertIsPalindrome("", false);
-        assertIsPalindrome("lotion", false);
-        assertIsPalindrome("racecar", true);
-
-        assertIsPalindrome("RaceCar", true);
-        assertIsPalindrome("    ", false);
-        assertIsPalindrome("Step on no pets", true);
-        assertIsPalindrome("Step    onno pets", true);
-        assertIsPalindrome("No lemon, no melons", false);
-
-        assertIsPalindrome("Eva,  can I See bees in    a Cave??????", true);
-        assertIsPalindrome("A man, a plan, a canal : PAnama!!!12345", true);
-
-    }
-
-    @Test
-    public void testGetLongestPalindrome() {
-        assertGetLongestPalindrome("Aaaaa", Arrays.asList("Aaaaa"));
-        assertGetLongestPalindrome("A racecar", Arrays.asList("racecar"));
-        assertGetLongestPalindrome("No lemon, no melons",Arrays.asList("No lemon, no melon"));
-        assertGetLongestPalindrome("A racecar reviver", Arrays.asList("racecar","reviver"));
-
-        assertGetLongestPalindrome("", new ArrayList<>());
-        assertGetLongestPalindrome("Racecars racing", Arrays.asList("Racecar", "cars rac"));
-        assertGetLongestPalindrome("Ra_ce% ca rs racing",Arrays.asList("Ra_ce% ca r","ca rs rac"));
-        assertGetLongestPalindrome("Abcab",Arrays.asList("A","b","c","a"));
-        assertGetLongestPalindrome("AbcaB",Arrays.asList("A","b","c","a","B"));
+    public static void main(String[] args) {
+        int[][] parentChildPairs = {
+                {1, 3}, {2, 3}, {3, 6}, {5, 6}, {5, 7}, {4, 5}, {4, 8}, {8, 9}, {10, 2}
+        };
+        Main ob = new Main();
+        System.out.println(ob.hasSharedAncestor(parentChildPairs, 3, 8));
+        System.out.println(ob.hasSharedAncestor(parentChildPairs, 5, 8));
+        System.out.println(ob.hasSharedAncestor(parentChildPairs, 6, 8));
+        System.out.println(ob.hasSharedAncestor(parentChildPairs, 6, 9));
+        System.out.println(ob.hasSharedAncestor(parentChildPairs, 8, 9));
+        System.out.println(ob.hasSharedAncestor(parentChildPairs, 2, 10));
+        System.out.println(ob.hasSharedAncestor(parentChildPairs, 2, 2));
     }
 }
 
