@@ -6,7 +6,9 @@ public class LargeNumberAddition {
         int i, j, carry = 0;
 
         for (i = number1.length() - 1, j = number2.length() - 1; i >= 0 && j >= 0; i--, j--) {
-            int sum = Character.getNumericValue(number1.charAt(i)) + Character.getNumericValue(number2.charAt(j)) + carry;
+            int sum = Character.getNumericValue(number1.charAt(i))
+                        + Character.getNumericValue(number2.charAt(j))
+                        + carry;
             result.insert(0, sum%10);
             carry = sum / 10;
         }
