@@ -1,73 +1,101 @@
-# DFS
-
-Start typing here...
 ```Java
-package com.wayfair.ancestor;
-
-import java.util.*;
-import java.util.HashSet;
-import java.util.Set;
-
-public class Main {
-
-    private void dfsGraph(
-        Map<Integer, ArrayList<Integer>> map, int parent, int curr,
-        Map<Integer, ArrayList<Integer>> result, Set<Integer> visit) {
-        visit.add(curr);
-        for (int dest : map.get(curr)) {
-            if (!visit.contains(dest)) {
-                result.get(dest).add(parent);
-                dfsGraph(map, parent, dest, result, visit);
-            }
-        }
+public class CategoryCollection {
+    Map<String, String> categoryMap;
+    public CategoryCollection() {
+        categoryMap = new HashMap<>();
     }
-
-    public Map<Integer, ArrayList<Integer>> getAncestors(int[][] edges) {
-        Set<Integer> nodes = new HashSet<>();
-        for (int[] edge : edges) {
-            nodes.add(edge[0]);
-            nodes.add(edge[1]);
-        }
-        Map<Integer, ArrayList<Integer>> graph = new HashMap<>();
-        Map<Integer, ArrayList<Integer>> result = new HashMap<>();
-        for (int node: nodes) {
-            result.put(node, new ArrayList<>());
-            graph.put(node, new ArrayList<>());
-        }
-        for (int[] edge : edges) {
-            graph.get(edge[0]).add(edge[1]);
-        }
-        for (int node: graph.keySet()) {
-            dfsGraph(graph, node, node, result, new HashSet<>());
-        }
-        return result;
+    public void addCategory(String childCategory, String parentCategory) {
+        categoryMap.put(childCategory, parentCategory);
     }
-
-    public boolean hasSharedAncestor(int[][] parentChildPairs, int node1, int node2) {
-        Map<Integer, ArrayList<Integer>> ancestors = getAncestors(parentChildPairs);
-        List<Integer> node1Ancestors = ancestors.get(node1);
-        List<Integer> node2Ancestors = ancestors.get(node2);
-        for (int ancestor1: node1Ancestors) {
-            for (int ancestor2: node2Ancestors) {
-                if (ancestor1 == ancestor2) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    public static void main(String[] args) {
-        int[][] parentChildPairs = {
-                {1, 3}, {2, 3}, {3, 6},
-                {5, 6}, {5, 7}, {4, 5},
-                {4, 8}, {8, 9}, {10, 2}
-        };
-        Main ob = new Main();
-        System.out.println(ob.hasSharedAncestor(parentChildPairs, 3, 8));
-        System.out.println(ob.hasSharedAncestor(parentChildPairs, 5, 8));
-        System.out.println(ob.hasSharedAncestor(parentChildPairs, 6, 8));
+    public Map<String, String> getCategoryMap() {
+        return categoryMap;
     }
 }
 
+public class Coupon {
+
+    private final String couponName;
+    private final String dateModified;
+    public Coupon( String couponName, String dateModified) {
+        this.couponName = couponName;
+        this.dateModified = dateModified;
+    }
+    public String getCouponName() {
+        return couponName;
+    }
+    public String getDateModified() {
+        return dateModified;
+    }
+}
+
+public class CouponCollection {
+
+    Map<String, List<Coupon>> couponMap;
+    Map<String, String> categoryMap;
+    String todaysDate;
+
+    public CouponCollection( CategoryCollection categories ) {
+        couponMap = new HashMap<>();
+        categoryMap = categories.getCategoryMap();
+        LocalDate today = LocalDate.now();
+        todaysDate = today.toString();
+    }
+
+    public void addCoupon(String coupon, String dateModified, String category) {
+        Coupon c = new Coupon(coupon, dateModified);
+        couponMap.putIfAbsent(category, new ArrayList<>());
+        couponMap.get(category).add(c);
+        // Sort in reverse based on dates
+        try {
+            couponMap.get(category).sort(new Comparator<Coupon>() {
+                @Override
+                public int compare(Coupon c1, Coupon c2) {
+                    return c2.getDateModified().compareTo(c1.getDateModified());
+                }
+            });
+        } catch (Exception ex) {
+            throw new RuntimeException("Error creating coupon collection.");
+        }
+    }
+
+    public String findDatedCouponForCategory(String category) {
+        if ( couponMap.containsKey(category)) {
+            int couponIdx = 0;
+            while (couponMap.get(category).get(couponIdx).getDateModified().compareTo(todaysDate) > 0 ) {
+                couponIdx += 1;
+            }
+            return couponMap.get(category).get(couponIdx).getCouponName();
+        } else if ( categoryMap.containsKey(category)) {
+            return findCouponForCategory(categoryMap.get(category));
+        }
+        return "No Coupon";
+    }
+
+    public String findCouponForCategory(String category) {
+        if ( couponMap.containsKey(category)) {
+            return couponMap.get(category).get(0).getCouponName();
+        } else if ( categoryMap.containsKey(category)) {
+            return findCouponForCategory(categoryMap.get(category));
+        }
+        return "No Coupon";
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+
+        CategoryCollection categories = new CategoryCollection();
+        categories.addCategory("Comforter Sets", "Bedding");
+
+        CouponCollection coupons = new CouponCollection(categories);
+        coupons.addCoupon("Comforter Sale", "2024-01-01", "Comforter Sets");
+
+        // Positive Test Cases
+        assert Objects.equals(coupons.findCouponForCategory("Comforter Sets"), "Comforter Sale") : "Failed Test 1";
+        assert Objects.equals(coupons.findCouponForCategory("Bedding"), "Bedding Bargains") : "Failed Test 2";
+      
+        // Negative Test Cases
+        assert Objects.equals(coupons.findCouponForCategory("Unknown Category"), "No Coupon") : "Failed Test 8";
+    }
+}
 ```
