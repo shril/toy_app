@@ -1,7 +1,8 @@
 ```Java
 public class Main {
 
-    private void dfsGraph(Map<Integer, ArrayList<Integer>> adj, int parent, int curr, Map<Integer, ArrayList<Integer>> ancestors, Set<Integer> visit) {
+    private void dfsGraph(Map<Integer, ArrayList<Integer>> adj, int parent, int curr,
+    Map<Integer, ArrayList<Integer>> ancestors, Set<Integer> visit) {
         visit.add(curr);
         for (int child : adj.get(curr)) {
             if (!visit.contains(child)) {
