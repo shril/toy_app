@@ -1,101 +1,106 @@
 ```Java
-public class CategoryCollection {
-    Map<String, String> categoryMap;
-    public CategoryCollection() {
-        categoryMap = new HashMap<>();
-    }
-    public void addCategory(String childCategory, String parentCategory) {
-        categoryMap.put(childCategory, parentCategory);
-    }
-    public Map<String, String> getCategoryMap() {
-        return categoryMap;
-    }
-}
+public class LargeNumberAddition {
 
-public class Coupon {
+    public String add(String number1, String number2) {
+        StringBuilder result = new StringBuilder();
+        int i, j, carry = 0;
 
-    private final String couponName;
-    private final String dateModified;
-    public Coupon( String couponName, String dateModified) {
-        this.couponName = couponName;
-        this.dateModified = dateModified;
-    }
-    public String getCouponName() {
-        return couponName;
-    }
-    public String getDateModified() {
-        return dateModified;
-    }
-}
-
-public class CouponCollection {
-
-    Map<String, List<Coupon>> couponMap;
-    Map<String, String> categoryMap;
-    String todaysDate;
-
-    public CouponCollection( CategoryCollection categories ) {
-        couponMap = new HashMap<>();
-        categoryMap = categories.getCategoryMap();
-        LocalDate today = LocalDate.now();
-        todaysDate = today.toString();
-    }
-
-    public void addCoupon(String coupon, String dateModified, String category) {
-        Coupon c = new Coupon(coupon, dateModified);
-        couponMap.putIfAbsent(category, new ArrayList<>());
-        couponMap.get(category).add(c);
-        // Sort in reverse based on dates
-        try {
-            couponMap.get(category).sort(new Comparator<Coupon>() {
-                @Override
-                public int compare(Coupon c1, Coupon c2) {
-                    return c2.getDateModified().compareTo(c1.getDateModified());
-                }
-            });
-        } catch (Exception ex) {
-            throw new RuntimeException("Error creating coupon collection.");
+        for (i = number1.length() - 1, j = number2.length() - 1; i >= 0 && j >= 0; i--, j--) {
+            int sum = Character.getNumericValue(number1.charAt(i)) + Character.getNumericValue(number2.charAt(j)) + carry;
+            result.insert(0, sum%10);
+            carry = sum / 10;
         }
+        while (i >= 0) {
+            int sum = Character.getNumericValue(number1.charAt(i)) + carry;
+            result.insert(0, sum%10);
+            carry = sum / 10;
+            i -= 1;
+        }
+        while (j >= 0) {
+            int sum = Character.getNumericValue(number2.charAt(j)) + carry;
+            result.insert(0, sum%10);
+            carry = sum / 10;
+            j -= 1;
+        }
+        if (carry > 0) {
+            result.insert(0, 1);
+        }
+        return result.toString();
     }
 
-    public String findDatedCouponForCategory(String category) {
-        if ( couponMap.containsKey(category)) {
-            int couponIdx = 0;
-            while (couponMap.get(category).get(couponIdx).getDateModified().compareTo(todaysDate) > 0 ) {
-                couponIdx += 1;
-            }
-            return couponMap.get(category).get(couponIdx).getCouponName();
-        } else if ( categoryMap.containsKey(category)) {
-            return findCouponForCategory(categoryMap.get(category));
-        }
-        return "No Coupon";
+    public String addWithCommas(String number1, String number2) {
+        number1 = number1.replace(",","");
+        number2 = number2.replace(",","");
+
+        String result = add(number1, number2);
+
+        return addCommas(result);
     }
 
-    public String findCouponForCategory(String category) {
-        if ( couponMap.containsKey(category)) {
-            return couponMap.get(category).get(0).getCouponName();
-        } else if ( categoryMap.containsKey(category)) {
-            return findCouponForCategory(categoryMap.get(category));
+    private String addCommas(String number) {
+        StringBuilder num = new StringBuilder(number);
+        for (int i = number.length()-3 ; i > 0; i-=3 ) {
+            num.insert(i, ",");
         }
-        return "No Coupon";
+        return num.toString();
+    }
+
+    public String fibonacci(int n) {
+        if (n <= 2)
+            return "1";
+        List<String> sequence = new ArrayList<>();
+        sequence.add("1");
+        sequence.add("1");
+        for ( int i = 2; i < n; i++) {
+            sequence.add(add(sequence.get(i-1),sequence.get(i-2)));
+        }
+        return sequence.getLast();
     }
 }
 
-public class Main {
-    public static void main(String[] args) {
+public class LargeNumberAddition_Test {
 
-        CategoryCollection categories = new CategoryCollection();
-        categories.addCategory("Comforter Sets", "Bedding");
+    LargeNumberAddition lna;
 
-        CouponCollection coupons = new CouponCollection(categories);
-        coupons.addCoupon("Comforter Sale", "2024-01-01", "Comforter Sets");
+    public LargeNumberAddition_Test() {
+        lna = new LargeNumberAddition();
+    }
 
-        // Positive Test Cases
-        assert Objects.equals(coupons.findCouponForCategory("Comforter Sets"), "Comforter Sale") : "Failed Test 1";
-        assert Objects.equals(coupons.findCouponForCategory("Bedding"), "Bedding Bargains") : "Failed Test 2";
-      
-        // Negative Test Cases
-        assert Objects.equals(coupons.findCouponForCategory("Unknown Category"), "No Coupon") : "Failed Test 8";
+    @Test
+    public void testAdd() {
+        assertAdd("99999","1","100000");
+        assertAdd("1","8","9");
+        assertAdd("15","15","30");
+        assertAdd("3456","1234","4690");
+        // Large Numbers
+        assertAdd("9999999999999999","11111111111111111111","11121111111111111110");
+
+    }
+
+    @Test
+    public void testAddWithCommas() {
+        assertAddWithCommas("99,999","1","100,000");
+        assertAddWithCommas("1","8","9");
+        assertAddWithCommas("15","15","30");
+        assertAddWithCommas("3,456","1,234","4,690");
+        //Commas test
+        assertAddWithCommas("123,456","111,234","234,690");
+        assertAddWithCommas("123,456","999,234","1,122,690");
+        assertAddWithCommas("1,123,456","111,234","1,234,690");
+        // Large Numbers
+        assertAddWithCommas("9,999,999,999,999,999","11,111,111,111,111,111,111","11,121,111,111,111,111,110");
+
+    }
+
+    public void assertAdd(String a, String b, String expected) {
+        String answer = lna.add(a,b);
+        assertEquals(answer, expected);
+    }
+
+    public void assertAddWithCommas(String a, String b, String expected) {
+        String answer = lna.addWithCommas(a,b);
+        assertEquals(answer, expected);
     }
 }
+
 ```
